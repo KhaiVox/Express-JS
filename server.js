@@ -14,6 +14,10 @@ app.get('/', (req, res, next) => {
     res.json('Home')
 })
 
+const accountRouter = require('./routers/account')
+
+app.use('/api/account', accountRouter)
+
 // Register
 app.post('/register', (req, res, next) => {
     var username = req.body.username
