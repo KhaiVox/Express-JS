@@ -3,6 +3,9 @@ const app = express()
 var bodyParser = require('body-parser')
 const AccountModel = require('./models/account')
 
+const path = require('path')
+app.use('/public', express.static(path.join(__dirname, '/public')))
+
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
@@ -11,7 +14,8 @@ app.use(bodyParser.json())
 // Home
 // chỉ phương thức GET mới hiện view
 app.get('/', (req, res, next) => {
-    res.json('Home')
+    var duongDanFile = path.join(__dirname, 'home.html')
+    res.sendFile(duongDanFile)
 })
 
 const accountRouter = require('./routers/account')
