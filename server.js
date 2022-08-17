@@ -3,6 +3,7 @@ const app = express()
 var bodyParser = require('body-parser')
 const AccountModel = require('./models/account')
 
+// Static file
 const path = require('path')
 app.use('/public', express.static(path.join(__dirname, '/public')))
 
