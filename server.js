@@ -69,6 +69,6 @@ app.post('/login', (req, res, next) => {
         })
 })
 
-app.listen(5000, () => {
+app.listen(process.env.PORT, () => {
     console.log('Connect successfully!!!')
 })
