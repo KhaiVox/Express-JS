@@ -20,6 +20,41 @@ app.get('/', (req, res, next) => {
 })
 
 const accountRouter = require('./routers/account')
+// giới hạn số lượng item trong 1 trang
+const PAGE_SIZE = 5
+
+app.get('/user', (req, res, next) => {
+    // page lúc này có kiểu dữ liệu là string
+    var page = req.query.page
+    if (page) {
+        // get page
+        // cần ép kiểu sang kiểu int
+        page = parseInt(page)
+        if (page < 1) {
+            page = 1
+        }
+        // bỏ qua bao nhiêu phần tử để đến trang mong muốn
+        var skip = (page - 1) * PAGE_SIZE
+        AccountModel.find({})
+            .skip(skip)
+            .limit(PAGE_SIZE)
+            .then((data) => {
+                res.json(data)
+            })
+            .catch((err) => {
+                res.json('Lỗi render')
+            })
+    } else {
+        // get all
+        AccountModel.find({})
+            .then((data) => {
+                res.json(data)
+            })
+            .catch((err) => {
+                res.json('Lỗi render')
+            })
+    }
+})
 
 app.use('/api/account', accountRouter)
 
@@ -69,6 +104,6 @@ app.post('/login', (req, res, next) => {
         })
 })
 
-app.listen(process.env.PORT, () => {
+app.listen(5000, () => {
     console.log('Connect successfully!!!')
 })
