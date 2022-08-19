@@ -5,7 +5,8 @@ const AccountModel = require('./models/account')
 
 // Static file
 const path = require('path')
-app.use('/public', express.static(path.join(__dirname, '/public')))
+app.use(express.static(path.join(__dirname, 'public')))
+// app.use('/public', express.static(path.join(__dirname, '/public')))
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -15,12 +16,11 @@ app.use(bodyParser.json())
 // Home
 // chỉ phương thức GET mới hiện view
 app.get('/', (req, res, next) => {
-    var duongDanFile = path.join(__dirname, 'home.html')
-    res.sendFile(duongDanFile)
+    res.sendFile(path.join(__dirname, 'home.html'))
 })
 
 const accountRouter = require('./routers/account')
-// giới hạn số lượng item trong 1 trang
+// giới hạn số lượng item đc hiển thị trong 1 trang
 const PAGE_SIZE = 5
 
 app.get('/user', (req, res, next) => {
@@ -39,7 +39,11 @@ app.get('/user', (req, res, next) => {
             .skip(skip)
             .limit(PAGE_SIZE)
             .then((data) => {
-                res.json(data)
+                AccountModel.countDocuments({}).then((total) => {
+                    // đếm số trang để phục vụ cho render list html và chức năng prev/next
+                    var totalPage = Math.ceil(total / PAGE_SIZE)
+                    res.json({ total, totalPage, data })
+                })
             })
             .catch((err) => {
                 res.json('Lỗi render')
