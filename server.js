@@ -2,6 +2,10 @@ const express = require('express')
 const app = express()
 var bodyParser = require('body-parser')
 const AccountModel = require('./models/account')
+const jwt = require('jsonwebtoken')
+var cookieParser = require('cookie-parser')
+
+app.use(cookieParser())
 
 // Static file
 const path = require('path')
@@ -15,8 +19,8 @@ app.use(bodyParser.json())
 
 // Home
 // chỉ phương thức GET mới hiện view
-app.get('/', (req, res, next) => {
-    res.sendFile(path.join(__dirname, 'home.html'))
+app.get('/login', (req, res, next) => {
+    res.sendFile(path.join(__dirname, 'login.html'))
 })
 
 const accountRouter = require('./routers/account')
@@ -98,15 +102,43 @@ app.post('/login', (req, res, next) => {
     })
         .then((data) => {
             if (data) {
-                res.json('Đăng nhập thành công!')
+                var token = jwt.sign(
+                    {
+                        // cần chuyển đổi sang kiểu Object
+                        _id: data._id,
+                    },
+                    'mk',
+                )
+                return res.json({
+                    message: 'Thành công',
+                    token: token,
+                })
             } else {
-                res.status(500).json('Tài khoản hoặc mật khẩu chưa chính xác!')
+                return res.status(500).json('Tài khoản hoặc mật khẩu chưa chính xác!')
             }
         })
         .catch((err) => {
             res.status(500).json('Đã xảy ra lỗi!')
         })
 })
+
+app.get(
+    '/private',
+    (req, res, next) => {
+        try {
+            var token = req.cookies.token
+            var ketqua = jwt.verify(token, 'mk')
+            if (ketqua) {
+                next()
+            }
+        } catch (error) {
+            return res.json('Bạn cần phải login')
+        }
+    },
+    (req, res, next) => {
+        res.json('welcome')
+    },
+)
 
 app.listen(5000, () => {
     console.log('Connect successfully!!!')
