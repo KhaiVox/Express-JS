@@ -122,21 +122,102 @@ app.post('/login', (req, res, next) => {
         })
 })
 
+// Private
+// app.get(
+//     '/private',
+//     (req, res, next) => {
+//         try {
+//             var token = req.cookies.token
+//             var ketqua = jwt.verify(token, 'mk')
+//             if (ketqua) {
+//                 next()
+//             }
+//         } catch (error) {
+//             return res.json('Bạn cần phải login')
+//         }
+//     },
+//     (req, res, next) => {
+//         res.json('welcome')
+//     },
+// )
+
+var checkLogin = async (req, res, next) => {
+    try {
+        var token = req.cookies.token
+        var idUser = jwt.verify(token, 'mk')
+        const data = await AccountModel.findOne({ _id: idUser })
+        req.data = data
+    } catch (error) {
+        res.status(500).json('Loi server')
+    }
+    next()
+}
+
+var checkStudent = (req, res, next) => {
+    var role = req.data.role
+    if (role >= 0) {
+        next()
+    } else {
+        res.json('NOT PERMISSON')
+    }
+}
+
+var checkTeacher = (req, res, next) => {
+    var role = req.data.role
+    if (role >= 1) {
+        next()
+    } else {
+        res.json('NOT PERMISSON')
+    }
+}
+
+var checkManager = (req, res, next) => {
+    var role = req.data.role
+    if (role >= 2) {
+        next()
+    } else {
+        res.json('NOT PERMISSON')
+    }
+}
+
+app.get('/task', checkLogin, checkStudent, (req, res, next) => {
+    console.log(req.data)
+    res.json('ALL TASK')
+})
+
 app.get(
-    '/private',
+    '/student',
+    checkLogin,
+    checkTeacher,
     (req, res, next) => {
-        try {
-            var token = req.cookies.token
-            var ketqua = jwt.verify(token, 'mk')
-            if (ketqua) {
-                next()
-            }
-        } catch (error) {
-            return res.json('Bạn cần phải login')
-        }
+        next()
     },
     (req, res, next) => {
-        res.json('welcome')
+        res.json('STUDENT')
+    },
+)
+
+app.get(
+    '/teacher',
+    checkLogin,
+    checkManager,
+    (req, res, next) => {
+        next()
+    },
+    (req, res, next) => {
+        res.json('TEACHER')
+    },
+)
+
+app.get(
+    '/manager',
+    checkLogin,
+    checkManager,
+    (req, res, next) => {
+        next()
+    },
+    (req, res, next) => {
+        res.json('MANAGER')
     },
 )
 

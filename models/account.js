@@ -10,6 +10,7 @@ const Schema = mongoose.Schema
 const AccountSchema = new Schema({
     username: String,
     password: String,
+    role: String,
 })
 
 const AccountModel = mongoose.model('account', AccountSchema)
