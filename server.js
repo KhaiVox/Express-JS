@@ -10,21 +10,73 @@ app.use(cookieParser())
 // Static file
 const path = require('path')
 app.use(express.static(path.join(__dirname, 'public')))
-// app.use('/public', express.static(path.join(__dirname, '/public')))
 
-// parse application/x-www-form-urlencoded
+// Body parse
 app.use(bodyParser.urlencoded({ extended: false }))
-// parse application/json
 app.use(bodyParser.json())
 
 // Home
 // chỉ phương thức GET mới hiện view
+app.get(
+    '/',
+    (req, res, next) => {
+        var token = req.cookies.token
+        var decodeToken = jwt.verify(token, 'mk')
+        AccountModel.find({ _id: decodeToken._id }).then((data) => {
+            if (data.length == 0) {
+                res.sendFile(path.join(__dirname, 'login.html'))
+            } else {
+                // kiểm tra nếu đủ quyền mới có thể đăng nhập vào trang login
+                if (data[0].role == 2) {
+                    next()
+                }
+                // nếu k sẽ trả về giao diện login
+                else {
+                    res.sendFile(path.join(__dirname, 'login.html'))
+                }
+            }
+        })
+    },
+    (req, res, next) => {
+        res.sendFile(path.join(__dirname, 'home.html'))
+    },
+)
+
+// Edit
+app.post(
+    '/edit',
+    (req, res, next) => {
+        // cắt chuỗi để lấy giá trị token bị ngăn cách bởi dấu =
+        var token = req.headers.cookie.split('=')[1]
+        var decodeToken = jwt.verify(token, 'mk')
+        AccountModel.find({ _id: decodeToken._id }).then((data) => {
+            if (data.length == 0) {
+                return res.redirect('/login')
+            } else {
+                if (data[0].role == 2) {
+                    next()
+                } else {
+                    return res.json({
+                        error: true,
+                        message: 'Bạn không có quyền sửa',
+                    })
+                }
+            }
+        })
+    },
+    (req, res, next) => {
+        // thực hiện edit tại đây
+        res.json('Sửa thành công')
+    },
+)
+
+// GET Login
 app.get('/login', (req, res, next) => {
     res.sendFile(path.join(__dirname, 'login.html'))
 })
 
 const accountRouter = require('./routers/account')
-// giới hạn số lượng item đc hiển thị trong 1 trang
+    // giới hạn số lượng item đc hiển thị trong 1 trang
 const PAGE_SIZE = 5
 
 app.get('/user', (req, res, next) => {
@@ -72,8 +124,8 @@ app.post('/register', (req, res, next) => {
     var password = req.body.password
 
     AccountModel.findOne({
-        username: username,
-    })
+            username: username,
+        })
         .then((data) => {
             if (data) {
                 res.json('User này đã tồn tại!')
@@ -91,19 +143,18 @@ app.post('/register', (req, res, next) => {
         })
 })
 
-// Login
+// POST Login
 app.post('/login', (req, res, next) => {
     var username = req.body.username
     var password = req.body.password
 
     AccountModel.findOne({
-        username: username,
-        password: password,
-    })
+            username: username,
+            password: password,
+        })
         .then((data) => {
             if (data) {
-                var token = jwt.sign(
-                    {
+                var token = jwt.sign({
                         // cần chuyển đổi sang kiểu Object
                         _id: data._id,
                     },
@@ -141,7 +192,7 @@ app.post('/login', (req, res, next) => {
 //     },
 // )
 
-var checkLogin = async (req, res, next) => {
+var checkLogin = async(req, res, next) => {
     try {
         var token = req.cookies.token
         var idUser = jwt.verify(token, 'mk')
